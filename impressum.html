@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impressum - Sunwalkers Studios</title>
+
+    <link rel="icon" type="image/png" href="SunwalkersStudiosLogo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'logo-dark-bg': '#2A1A2A',
+                        'logo-card-bg': '#402F40',
+                        'logo-accent-orange': '#FFB733',
+                        'logo-text-light': '#E8E0D2',
+                    },
+                    fontFamily: {
+                        pixel: ['"Press Start 2P"', 'cursive'],
+                    },
+                    boxShadow: {
+                        'logo-glow': '0 0 8px #FFB733, 0 0 12px rgba(255, 183, 51, 0.5)',
+                    }
+                }
+            }
+        }
+
+        body {
+            background-color: #2A1A2A;
+            background-image: linear-gradient(0deg, transparent 24%, #402F40 25%, #402F40 26%, transparent 27%, transparent 74%, #402F40 75%, #402F40 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, #402F40 25%, #402F40 26%, transparent 27%, transparent 74%, #402F40 75%, #402F40 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+            color: #E8E0D2;
+            min-height: 100vh;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+        }
+
+        .text-logo-glow {
+            text-shadow: 0 0 5px #FFB733, 0 0 10px rgba(255, 183, 51, 0.7);
+        }
+
+        .pixel-border {
+            border-radius: 0.5rem;
+            border-style: solid;
+        }
+
+        /* Lesbare Schrift fuer den Rechtstext (Pixel-Font ist fuer lange Absaetze unlesbar) */
+        .readable {
+            font-family: 'Segoe UI', Tahoma, Verdana, Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .readable a { color: #FFB733; text-decoration: underline; }
+    </style>
+</head>
+<body class="antialiased text-logo-text-light">
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-10 bg-logo-dark-bg bg-opacity-95 p-4 border-b-4 border-logo-accent-orange shadow-logo-glow">
+        <div class="max-w-7xl mx-auto flex justify-between items-center flex-wrap">
+            <a href="index.html" class="flex items-center space-x-2">
+                <img src="SunwalkersStudiosLogo.png" onerror="this.onerror=null; this.src='https://placehold.co/60x60/2A1A2A/FFB733?text=Logo';" alt="Sunwalkers Studios Logo" class="w-10 h-10 sm:w-12 sm:h-12">
+                <span class="text-base text-logo-accent-orange text-logo-glow hidden sm:block">SUNWALKERS</span>
+            </a>
+            <nav class="space-x-2 sm:space-x-4 flex">
+                <a href="index.html" class="text-logo-text-light hover:text-logo-accent-orange text-xs sm:text-sm p-1 sm:p-2 transition duration-300">&lt; ZURUECK</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hauptinhalt -->
+    <main class="p-4 md:p-8">
+        <section class="max-w-3xl mx-auto bg-logo-card-bg p-6 md:p-12 pixel-border ring-4 ring-logo-accent-orange shadow-logo-glow my-10">
+            <h1 class="text-xl sm:text-2xl text-logo-accent-orange mb-8 border-b-2 pb-3 text-logo-glow">
+                // IMPRESSUM
+            </h1>
+
+            <div class="readable text-logo-text-light space-y-6">
+
+                <div>
+                    <h2 class="text-logo-accent-orange mb-2" style="font-size:16px;">Angaben gem&auml;&szlig; &sect; 5 DDG</h2>
+                    <p>
+                        SunwalkersStudios<br>
+                        Einzelunternehmen &middot; Inhaber: Marcel Weh<br>
+                        Gro&szlig;er Winkel 17E<br>
+                        31552 Apelern<br>
+                        Deutschland
+                    </p>
+                </div>
+
+                <div>
+                    <h2 class="text-logo-accent-orange mb-2" style="font-size:16px;">Kontakt</h2>
+                    <p>
+                        Telefon: 0172 3817888<br>
+                        E-Mail: <a href="mailto:sunwalkers@sunwalkersstudios.de">sunwalkers@sunwalkersstudios.de</a>
+                    </p>
+                </div>
+
+                <div>
+                    <h2 class="text-logo-accent-orange mb-2" style="font-size:16px;">Umsatzsteuer-Identifikationsnummer</h2>
+                    <p>
+                        Umsatzsteuer-Identifikationsnummer gem&auml;&szlig; &sect; 27 a Umsatzsteuergesetz:<br>
+                        <strong>DE116537015</strong>
+                    </p>
+                </div>
+
+                <div>
+                    <h2 class="text-logo-accent-orange mb-2" style="font-size:16px;">Redaktionell verantwortlich (&sect; 18 Abs. 2 MStV)</h2>
+                    <p>
+                        Marcel Weh<br>
+                        Gro&szlig;er Winkel 17E<br>
+                        31552 Apelern
+                    </p>
+                </div>
+
+                <div>
+                    <h2 class="text-logo-accent-orange mb-2" style="font-size:16px;">EU-Streitschlichtung</h2>
+                    <p>
+                        Die Europ&auml;ische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:
+                        <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener">https://ec.europa.eu/consumers/odr/</a>.<br>
+                        Unsere E-Mail-Adresse finden Sie oben im Impressum.
+                    </p>
+                </div>
+
+                <div>
+                    <h2 class="text-logo-accent-orange mb-2" style="font-size:16px;">Verbraucherstreitbeilegung / Universalschlichtungsstelle</h2>
+                    <p>
+                        Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer
+                        Verbraucherschlichtungsstelle teilzunehmen (&sect; 36 VSBG).
+                    </p>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-7xl mx-auto text-center py-8 border-t-2 border-logo-accent-orange mt-12">
+        <p class="text-logo-text-light opacity-50 text-xs sm:text-sm">
+            &copy; 2025 SUNWALKERS STUDIOS. DOMAIN: SUNWALKERSSTUDIOS.DE
+        </p>
+        <p class="text-logo-text-light opacity-50 text-xs mt-1">
+            <a href="index.html" class="hover:text-logo-accent-orange">STARTSEITE</a>
+        </p>
+    </footer>
+
+</body>
+</html>
