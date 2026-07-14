@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTX PRO 5000 Blackwell GPU Passthrough on Proxmox VE 9 — Sunwalkers Studios Lab</title>
+    <meta name="description" content="Fixing three cascading bugs when passing an NVIDIA RTX PRO 5000 Blackwell GPU through to a VM on Proxmox VE 9: the kvm segfault at 40 (GeForce BAR0 quirk), NVRM BAR0 is 0M (pci=realloc), and RmInitAdapter failed / open kernel modules.">
+    <link rel="icon" type="image/png" href="../SunwalkersStudiosLogo.png">
+    <link rel="canonical" href="https://sunwalkersstudios.de/blog/blackwell-proxmox-gpu-passthrough.html">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        tailwind.config = {
+            theme: { extend: { colors: {
+                'logo-dark-bg': '#2A1A2A', 'logo-card-bg': '#402F40',
+                'logo-accent-orange': '#FFB733', 'logo-text-light': '#E8E0D2',
+            }, fontFamily: { pixel: ['"Press Start 2P"','cursive'] },
+               boxShadow: { 'logo-glow': '0 0 8px #FFB733, 0 0 12px rgba(255,183,51,0.5)' } } }
+        };
+    </script>
+    <style>
+        body {
+            background-color: #2A1A2A;
+            background-image: linear-gradient(0deg, transparent 24%, #402F40 25%, #402F40 26%, transparent 27%, transparent 74%, #402F40 75%, #402F40 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, #402F40 25%, #402F40 26%, transparent 27%, transparent 74%, #402F40 75%, #402F40 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+            color: #E8E0D2;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 16px; line-height: 1.7;
+        }
+        .pixel { font-family: 'Press Start 2P', cursive; }
+        .text-logo-glow { text-shadow: 0 0 5px #FFB733, 0 0 10px rgba(255,183,51,0.7); }
+        .pixel-border { border-radius: 0.5rem; border-style: solid; }
+
+        .article h2 { font-family:'Press Start 2P',cursive; color:#FFB733; font-size:1.05rem; line-height:1.6; margin:2.6rem 0 1rem; padding-bottom:.6rem; border-bottom:2px solid rgba(255,183,51,.35); text-shadow:0 0 5px rgba(255,183,51,.5); }
+        .article h3 { font-family:'Press Start 2P',cursive; color:#FFB733; font-size:.8rem; line-height:1.6; margin:2rem 0 .8rem; }
+        .article h4 { color:#FFB733; font-weight:600; font-size:1rem; margin:1.4rem 0 .4rem; text-transform:uppercase; letter-spacing:.04em; }
+        .article p { margin:.9rem 0; }
+        .article ul,.article ol { margin:.9rem 0 .9rem 1.4rem; }
+        .article li { margin:.4rem 0; }
+        .article ul { list-style:square; }
+        .article ol { list-style:decimal; }
+        .article a { color:#FFB733; text-decoration:underline; text-underline-offset:2px; }
+        .article a:hover { color:#E8E0D2; }
+        .article strong { color:#Fff; font-weight:600; }
+        .article code { font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.86em; background:#1d131d; color:#FFCF8A; padding:.1em .4em; border-radius:.25rem; border:1px solid rgba(255,183,51,.18); }
+        .article pre { background:#181018; border:1px solid rgba(255,183,51,.22); border-left:4px solid #FFB733; border-radius:.4rem; padding:1rem 1.1rem; overflow-x:auto; margin:1.1rem 0; }
+        .article pre code { background:none; border:none; color:#E8E0D2; padding:0; font-size:.82rem; line-height:1.55; }
+        .article blockquote { border-left:4px solid #FFB733; background:rgba(255,183,51,.07); padding:.7rem 1.1rem; margin:1.2rem 0; border-radius:.3rem; }
+        .article blockquote p { margin:.3rem 0; }
+        .article table { width:100%; border-collapse:collapse; margin:1.2rem 0; font-size:.9rem; }
+        .article th,.article td { border:1px solid rgba(255,183,51,.25); padding:.5rem .7rem; text-align:left; vertical-align:top; }
+        .article th { background:#402F40; color:#FFB733; }
+        .article hr { border:0; border-top:2px solid rgba(255,183,51,.25); margin:2.4rem 0; }
+        .lede { font-size:1.05rem; color:#cbbfd6; font-style:italic; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-10 bg-logo-dark-bg bg-opacity-95 p-4 border-b-4 border-logo-accent-orange shadow-logo-glow">
+        <div class="max-w-5xl mx-auto flex justify-between items-center flex-wrap">
+            <a href="../index.html" class="flex items-center space-x-2">
+                <img src="../SunwalkersStudiosLogo.png" onerror="this.onerror=null;this.src='https://placehold.co/60x60/2A1A2A/FFB733?text=Logo';" alt="Sunwalkers Studios Logo" class="w-10 h-10 sm:w-12 sm:h-12">
+                <span class="pixel text-base text-logo-accent-orange text-logo-glow hidden sm:block">SUNWALKERS</span>
+            </a>
+            <nav class="space-x-2 sm:space-x-4 flex pixel text-xs">
+                <a href="../index.html" class="text-logo-text-light hover:text-logo-accent-orange p-1 sm:p-2 transition">HOME</a>
+                <a href="./" class="text-logo-accent-orange hover:text-logo-text-light p-1 sm:p-2 transition">LAB</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="p-4 md:p-8">
+        <article class="article max-w-3xl mx-auto bg-logo-card-bg p-6 md:p-12 pixel-border ring-2 ring-logo-accent-orange shadow-logo-glow my-8">
+
+            <p class="pixel text-xs text-logo-accent-orange mb-4">// LAB LOG &nbsp;·&nbsp; 2026-07-14</p>
+            <h1 class="pixel text-logo-accent-orange text-logo-glow" style="font-size:1.35rem;line-height:1.7;margin-bottom:1.2rem;">NVIDIA RTX&nbsp;PRO&nbsp;5000 "Blackwell" GPU Passthrough on Proxmox&nbsp;VE&nbsp;9</h1>
+            <p class="lede">Three bugs, three fixes. Getting the <code>kvm: segfault at 40</code>, the guest <code>NVRM: BAR0 is 0M</code>, and <code>RmInitAdapter failed (0x22:0x56:897)</code> out of the way — all on one card, in sequence.</p>
+
+            <hr>
+
+            <h2>TL;DR</h2>
+            <p>Passing an <strong>NVIDIA RTX PRO 5000 Blackwell (48&nbsp;GB, PCI <code>10de:2bb3</code>)</strong> through to a VM on Proxmox&nbsp;VE&nbsp;9 failed three times in a row, each with a different root cause. If you are hitting any of these on a Blackwell card (RTX&nbsp;PRO&nbsp;5000/6000, RTX&nbsp;50-series), you probably need <strong>all three</strong> fixes:</p>
+            <ol>
+                <li><strong>QEMU segfaults on VM start</strong> (<code>kvm: segfault at 40</code>, NULL deref right after "reset done") → QEMU wrongly applies the legacy <strong>GeForce BAR0 quirk</strong> to a professional card. Fix: <code>x-no-geforce-quirks=on</code> on the <code>vfio-pci</code> device.</li>
+                <li><strong>Guest boots but the GPU is dead</strong> (<code>NVRM: BAR0 is 0M @ 0x0</code>, <code>nvidia-smi: No devices were found</code>) → the card's 64&nbsp;MB 32-bit <strong>BAR0 can't be assigned</strong> because the eGPU/OCuLink PCIe root port only exposes a 1&nbsp;MB 32-bit window. Fix: <code>pci=realloc</code> on the host kernel cmdline.</li>
+                <li><strong>Driver loads but won't init</strong> (<code>NVRM: requires use of the NVIDIA open kernel modules</code>) → Blackwell requires the <strong>open</strong> kernel modules, not the proprietary ones. Fix: install the <code>-open</code> DKMS variant.</li>
+            </ol>
+
+            <h2>Environment</h2>
+            <table>
+                <tr><th>Host</th><td>Mini-PC (AMD Ryzen&nbsp;AI&nbsp;9 HX&nbsp;PRO&nbsp;370, "Strix Point"), GPU attached via <strong>OCuLink eGPU dock</strong></td></tr>
+                <tr><th>Hypervisor</th><td>Proxmox&nbsp;VE&nbsp;9.0.3, kernel <strong>6.17.9-1-pve</strong>, <code>pve-qemu-kvm</code> <strong>11.0.2-1</strong></td></tr>
+                <tr><th>IOMMU</th><td><code>amd_iommu=on</code> (note: <strong>no</strong> <code>iommu=pt</code>)</td></tr>
+                <tr><th>GPU</th><td>NVIDIA RTX&nbsp;PRO&nbsp;5000 Blackwell 48&nbsp;GB — <code>c7:00.0</code> (<code>10de:2bb3</code>) + <code>c7:00.1</code> audio (<code>10de:22e8</code>)</td></tr>
+                <tr><th>Guest</th><td>Ubuntu&nbsp;24.04, NVIDIA driver 580.159.03</td></tr>
+                <tr><th>Passthrough</th><td><code>hostpci0: 0000:c7:00,pcie=1</code>, efidisk with <code>pre-enrolled-keys=0</code> (Secure&nbsp;Boot off)</td></tr>
+            </table>
+            <p>The exact same config worked fine with an RTX&nbsp;4080 in the same slot. Everything below is Blackwell-specific.</p>
+
+            <hr>
+
+            <h2>Bug 1 — QEMU segfaults on VM start (<code>kvm: segfault at 40</code>)</h2>
+            <h3>Symptom</h3>
+            <pre><code># qm start 120
+kvm: ... segfault at 40 ip ... sp ... error 4 in qemu-system-x86_64</code></pre>
+            <p>The host <code>dmesg</code> shows a NULL-pointer dereference in the KVM/QEMU process, occurring <strong>immediately after</strong> the VFIO reset ("reset done"). Reproduces identically across <code>pve-qemu-kvm</code> <strong>10.0.2, 10.2.1 and 11.0.2</strong>, and on kernel 6.17.9. The card itself binds and resets cleanly at the kernel/vfio-pci level — this is purely a QEMU crash.</p>
+            <h4>Dead ends (so you don't waste time)</h4>
+            <ul>
+                <li>The warning <code>VFIO dma-buf not supported in kernel: PCI BAR IOMMU mappings may fail</code> is a <strong>red herring</strong> — the segfault happens with or without it.</li>
+                <li><strong>BAR1 size is not the cause.</strong> The card exposes a 64&nbsp;GB prefetchable BAR1 (Resizable BAR). Shrinking it to 256&nbsp;MB (<code>echo 8 &gt; /sys/bus/pci/devices/0000:c7:00.0/resource1_resize</code>, after unbinding from vfio-pci) did <strong>not</strong> stop the crash.</li>
+                <li>The <code>szoran</code> kernel patch for <code>Firmware has requested this device have a 1:1 IOMMU mapping, rejecting…</code> does <strong>not</strong> apply here — that dmesg rejection never appears, and our cmdline has no <code>iommu=pt</code>.</li>
+            </ul>
+            <h4>Root cause</h4>
+            <p>A gdb backtrace on a minimal QEMU reproducer pins the crash to:</p>
+            <pre><code>vfio_probe_nvidia_bar0_quirk   (hw/vfio/pci-quirks.c:928)
+  -> memory_region_add_subregion  with a NULL `mirror` MemoryRegion</code></pre>
+            <p>QEMU applies its <strong>legacy GeForce BAR0 quirk</strong> to the card and dereferences NULL. The quirk is meant for consumer GeForce cards; on a professional Blackwell card the code path hits a NULL region instead of degrading gracefully.</p>
+            <h4>Fix</h4>
+            <p>Disable the GeForce quirks on the <code>vfio-pci</code> device. The QEMU property description literally reads <em>"for NVIDIA Quadro/GRID/Tesla"</em> — i.e. professional cards:</p>
+            <pre><code>-device vfio-pci,host=0000:c7:00.0,...,x-no-geforce-quirks=on</code></pre>
+            <p>The minimal reproducer exits 0 (instead of 139) with this flag, and the VM starts for the first time.</p>
+            <p><strong>Making it persistent in Proxmox</strong> — Proxmox builds the QEMU command line itself, so patch the generator. In <code>/usr/share/perl5/PVE/QemuServer/PCI.pm</code>, inside the primary-function block (<code>if ($j == 0)</code>, around line 715), append the property:</p>
+            <pre><code>$devicestr .= ',x-no-geforce-quirks=on';</code></pre>
+            <p>Back up the file first. Verify it took effect:</p>
+            <pre><code>qm showcmd &lt;vmid&gt; | grep geforce</code></pre>
+            <blockquote><p>⚠️ <strong>This patch does not survive an <code>apt</code> upgrade of <code>qemu-server</code>.</strong> Re-apply it after any Proxmox package update that touches <code>PCI.pm</code>. (A cleaner long-term option is a systemd hook, or waiting for a Proxmox/QEMU release that guards this quirk for professional cards.)</p></blockquote>
+
+            <hr>
+
+            <h2>Bug 2 — Guest sees the GPU but it's dead (<code>NVRM: BAR0 is 0M</code>)</h2>
+            <h3>Symptom</h3>
+            <p>VM now boots. In the guest the card is visible (<code>lspci</code> shows <code>01:00.0 10de:2bb3</code>) and the 580 driver loads, but:</p>
+            <pre><code>NVRM: GPU 0000:01:00.0: BAR0 is 0M @ 0x0 (PCI:0000:01:00.0)
+NVRM: The system BIOS may have misconfigured your GPU.
+nvidia-smi: No devices were found</code></pre>
+            <p>On the <strong>host</strong>, the boot log reveals the real problem:</p>
+            <pre><code>pci 0000:c7:00.0: BAR 0 [mem size 0x04000000]: can't assign; no space
+pci 0000:c7:00.0: BAR 0 [mem size 0x04000000]: failed to assign
+...
+pci 0000:03.1: bridge window [mem 0xdd200000-0xdd2fffff 64bit] ... [size=1M]</code></pre>
+            <h4>Root cause</h4>
+            <p>BAR0 is <strong>64&nbsp;MB, 32-bit non-prefetchable</strong>, so it must live below 4&nbsp;GB. The PCIe root port the eGPU/OCuLink hangs off of (<code>00:03.1</code> here) only advertises a <strong>1&nbsp;MB</strong> 32-bit memory window. 64&nbsp;MB doesn't fit → BAR0 gets size 0 → vfio-pci can't pass it through → the guest sees no Region 0 → <code>BAR0 is 0M</code>.</p>
+            <p>Hotplug remove + rescan does <strong>not</strong> help (the window isn't enlarged without reallocation). BAR1/ReBAR resizing is irrelevant here — BAR0 is a separate, 32-bit BAR.</p>
+            <h4>Fix</h4>
+            <p>Let the kernel reallocate PCI bridge windows so the 1&nbsp;MB window can grow to ≥64&nbsp;MB. Add <code>pci=realloc</code> to the host kernel cmdline in <code>/etc/default/grub</code>:</p>
+            <pre><code>GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on pci=realloc"</code></pre>
+            <pre><code>update-grub &amp;&amp; reboot</code></pre>
+            <p>Verify after reboot:</p>
+            <pre><code>cat /proc/cmdline | grep pci=realloc
+dmesg | grep 'c7:00.0.*BAR 0'      # must now say "assigned", e.g. 0x80000000-0x83ffffff
+cat /sys/bus/pci/devices/0000:c7:00.0/resource | head -1   # no longer 0x0 0x0 0x0</code></pre>
+            <blockquote><p>If <code>pci=realloc</code> alone isn't enough, try adding <code>pci=nocrs</code> (ignores ACPI <code>_CRS</code> window limits — slightly riskier), and check <strong>Above 4G Decoding / Resizable BAR</strong> in the host BIOS.</p></blockquote>
+
+            <hr>
+
+            <h2>Bug 3 — Driver loads but won't initialize (open kernel modules required)</h2>
+            <h3>Symptom</h3>
+            <p>BAR0 is now assigned and passed through, but the guest still fails:</p>
+            <pre><code>NVRM: The NVIDIA GPU 0000:01:00.0 (PCI ID: 10de:2bb3)
+NVRM: installed in this system requires use of the NVIDIA open kernel modules.
+NVRM: GPU 0000:01:00.0: RmInitAdapter failed! (0x22:0x56:897)
+NVRM: GPU 0000:01:00.0: rm_init_adapter failed, device minor number 0</code></pre>
+            <h4>Root cause</h4>
+            <p>Blackwell (and newer) GPUs are <strong>only supported by the NVIDIA open kernel modules</strong>. The proprietary/closed kernel module (<code>license: NVIDIA</code>) will load but cannot initialize the card. You need the <code>-open</code> build (<code>license: Dual MIT/GPL</code>).</p>
+            <h4>Fix (Ubuntu 24.04, packaged driver)</h4>
+            <p>Swap the closed DKMS module for the open one. This removes the closed kernel packages but keeps the 580 userspace libraries:</p>
+            <pre><code>apt install nvidia-dkms-580-server-open</code></pre>
+            <p>Then reload the stack <strong>without rebooting</strong> the VM (nothing is using the GPU yet, since it never initialized):</p>
+            <pre><code>systemctl stop nvidia-persistenced
+rmmod nvidia_drm nvidia_uvm nvidia_modeset nvidia
+modprobe nvidia
+systemctl start nvidia-persistenced</code></pre>
+            <p>Verify the open module is loaded:</p>
+            <pre><code>modinfo nvidia | grep license   # => license: Dual MIT/GPL  (open)  — NOT "NVIDIA" (closed)
+nvidia-smi                      # => NVIDIA RTX PRO 5000 Blackwell, 48 GB</code></pre>
+            <blockquote><p>If you install the driver via the <code>.run</code> installer instead, use <code>--kernel-module-type=open</code>. Make sure future DKMS rebuilds / driver upgrades keep the <strong>open</strong> flavor.</p></blockquote>
+
+            <hr>
+
+            <h2>Final verification</h2>
+            <pre><code>$ nvidia-smi
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 580.159.03     Driver Version: 580.159.03     CUDA Version: 13.0  |
+|  0  NVIDIA RTX PRO 5000 Blac... | 00000000:01:00.0 Off | 0MiB / 48935MiB | ..|
++-----------------------------------------------------------------------------+</code></pre>
+
+            <h2>Order of operations</h2>
+            <ol>
+                <li>Patch <code>PCI.pm</code> with <code>x-no-geforce-quirks=on</code> → VM starts without segfault.</li>
+                <li>Add <code>pci=realloc</code> to GRUB, <code>update-grub</code>, <strong>reboot host</strong> → BAR0 gets assigned.</li>
+                <li>In the guest: install <code>nvidia-dkms-&lt;ver&gt;-server-open</code>, reload modules → <code>nvidia-smi</code> works.</li>
+            </ol>
+            <p>Bugs 1 and 2 are host-side; bug 3 is guest-side. Bug 2 requires a host reboot; the others don't.</p>
+
+            <h2>Notes / caveats</h2>
+            <ul>
+                <li>The <code>PCI.pm</code> patch is fragile across Proxmox package upgrades — re-check <code>qm showcmd</code> after updates.</li>
+                <li><code>pre-enrolled-keys=0</code> (Secure Boot off in the VM's OVMF) avoids the separate MOK-signing rabbit hole for the DKMS module.</li>
+                <li>Tested with <code>pve-qemu-kvm 11.0.2-1</code> / kernel <code>6.17.9-1-pve</code>. Newer Proxmox/QEMU may guard the GeForce quirk upstream, making fix&nbsp;#1 unnecessary — check before patching.</li>
+            </ul>
+
+            <h2>References</h2>
+            <ul>
+                <li>Proxmox forum thread #181195 (RTX 5080 Blackwell, PVE9 / kernel 6.17)</li>
+                <li><code>github.com/szoran53/proxmox-kernel-6.17-gpu-passthrough</code> (a <em>different</em> Blackwell issue — the 1:1 IOMMU reject — not the one fixed here)</li>
+                <li>NVIDIA Developer Forum #339038 (PRO 6000 / 5090 host crash reports)</li>
+                <li>QEMU source: <code>hw/vfio/pci-quirks.c</code> — <code>vfio_probe_nvidia_bar0_quirk</code></li>
+            </ul>
+
+            <hr>
+            <p class="text-sm opacity-70">Written up after getting an RTX PRO 5000 Blackwell fully operational under Proxmox VE 9 in an OCuLink eGPU setup. Shared in case it saves someone else the three-bug detour. — <strong>Sunwalkers Studios</strong></p>
+        </article>
+    </main>
+
+    <footer class="max-w-5xl mx-auto text-center py-8 border-t-2 border-logo-accent-orange mt-12 pixel">
+        <p class="text-logo-text-light opacity-50 text-xs sm:text-sm">&copy; 2026 SUNWALKERS STUDIOS. DOMAIN: SUNWALKERSSTUDIOS.DE</p>
+        <p class="text-xs mt-3">
+            <a href="../index.html" class="text-logo-accent-orange hover:text-logo-text-light">HOME</a>
+            &nbsp;·&nbsp;
+            <a href="../impressum.html" class="text-logo-accent-orange hover:text-logo-text-light">IMPRESSUM</a>
+        </p>
+    </footer>
+
+</body>
+</html>

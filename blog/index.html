@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Log — Sunwalkers Studios</title>
+    <meta name="description" content="Sunwalkers Studios Lab Log — technical notes from building our own AI/GPU infrastructure and games.">
+    <link rel="icon" type="image/png" href="../SunwalkersStudiosLogo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        tailwind.config = { theme: { extend: { colors: {
+            'logo-dark-bg':'#2A1A2A','logo-card-bg':'#402F40','logo-accent-orange':'#FFB733','logo-text-light':'#E8E0D2',
+        }, boxShadow:{ 'logo-glow':'0 0 8px #FFB733, 0 0 12px rgba(255,183,51,0.5)' } } } };
+    </style>
+    <style>
+        body { background-color:#2A1A2A;
+            background-image:linear-gradient(0deg,transparent 24%,#402F40 25%,#402F40 26%,transparent 27%,transparent 74%,#402F40 75%,#402F40 76%,transparent 77%,transparent),linear-gradient(90deg,transparent 24%,#402F40 25%,#402F40 26%,transparent 27%,transparent 74%,#402F40 75%,#402F40 76%,transparent 77%,transparent);
+            background-size:50px 50px; color:#E8E0D2; font-family:'Inter',system-ui,sans-serif; }
+        .pixel { font-family:'Press Start 2P',cursive; }
+        .text-logo-glow { text-shadow:0 0 5px #FFB733,0 0 10px rgba(255,183,51,.7); }
+        .pixel-border { border-radius:.5rem; border-style:solid; }
+    </style>
+</head>
+<body class="antialiased">
+    <header class="sticky top-0 z-10 bg-logo-dark-bg bg-opacity-95 p-4 border-b-4 border-logo-accent-orange shadow-logo-glow">
+        <div class="max-w-5xl mx-auto flex justify-between items-center flex-wrap">
+            <a href="../index.html" class="flex items-center space-x-2">
+                <img src="../SunwalkersStudiosLogo.png" onerror="this.onerror=null;this.src='https://placehold.co/60x60/2A1A2A/FFB733?text=Logo';" alt="Sunwalkers Studios Logo" class="w-10 h-10 sm:w-12 sm:h-12">
+                <span class="pixel text-base text-logo-accent-orange text-logo-glow hidden sm:block">SUNWALKERS</span>
+            </a>
+            <nav class="space-x-2 sm:space-x-4 flex pixel text-xs">
+                <a href="../index.html" class="text-logo-text-light hover:text-logo-accent-orange p-1 sm:p-2 transition">HOME</a>
+                <a href="./" class="text-logo-accent-orange p-1 sm:p-2 transition">LAB</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="p-4 md:p-8">
+        <section class="max-w-3xl mx-auto text-center py-12 space-y-3">
+            <h1 class="pixel text-2xl sm:text-3xl text-logo-accent-orange text-logo-glow leading-snug">LAB LOG</h1>
+            <p class="text-sm text-logo-text-light opacity-80 max-w-xl mx-auto pt-3 border-t-2 border-logo-accent-orange mt-4">Technical notes from building our own AI/GPU infrastructure — and occasionally beating hardware into submission.</p>
+        </section>
+
+        <section class="max-w-3xl mx-auto space-y-5 mb-16">
+            <a href="blackwell-proxmox-gpu-passthrough.html" class="block bg-logo-card-bg p-6 pixel-border ring-2 ring-logo-accent-orange shadow-logo-glow hover:ring-4 transition">
+                <p class="pixel text-xs text-logo-accent-orange mb-3">2026-07-14 · PROXMOX · GPU</p>
+                <h2 class="text-xl font-semibold text-logo-text-light mb-2">RTX PRO 5000 "Blackwell" GPU Passthrough on Proxmox VE 9 — Three Bugs, Three Fixes</h2>
+                <p class="text-sm opacity-80">The <code class="text-logo-accent-orange">kvm: segfault at 40</code>, the guest <code class="text-logo-accent-orange">NVRM: BAR0 is 0M</code>, and <code class="text-logo-accent-orange">RmInitAdapter failed</code> — root causes and fixes for passing a Blackwell card through to a VM.</p>
+                <p class="text-xs text-logo-accent-orange mt-3">Read →</p>
+            </a>
+        </section>
+    </main>
+
+    <footer class="max-w-5xl mx-auto text-center py-8 border-t-2 border-logo-accent-orange mt-12 pixel">
+        <p class="text-logo-text-light opacity-50 text-xs sm:text-sm">&copy; 2026 SUNWALKERS STUDIOS. DOMAIN: SUNWALKERSSTUDIOS.DE</p>
+        <p class="text-xs mt-3">
+            <a href="../index.html" class="text-logo-accent-orange hover:text-logo-text-light">HOME</a>
+            &nbsp;·&nbsp;
+            <a href="../impressum.html" class="text-logo-accent-orange hover:text-logo-text-light">IMPRESSUM</a>
+        </p>
+    </footer>
+</body>
+</html>
