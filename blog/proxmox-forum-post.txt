@@ -1,0 +1,82 @@
+Cross-posting the full fix chain, since I landed on this thread while debugging the exact [ICODE]kvm: segfault at 40[/ICODE]. Getting an [B]RTX PRO 5000 Blackwell (48 GB, [ICODE]10de:2bb3[/ICODE])[/B] passed through to a VM on PVE 9 took three separate fixes, each with a different root cause. If you're on any Blackwell card (RTX PRO 5000/6000, RTX 50-series) you probably need all three.
+
+[HEADING=2]Environment[/HEADING]
+[LIST]
+[*]Host: mini-PC (Ryzen AI 9 HX PRO 370, "Strix Point"), GPU via [B]OCuLink eGPU dock[/B]
+[*]PVE 9.0.3, kernel [ICODE]6.17.9-1-pve[/ICODE], [ICODE]pve-qemu-kvm 11.0.2-1[/ICODE]
+[*][ICODE]amd_iommu=on[/ICODE] (note: no [ICODE]iommu=pt[/ICODE])
+[*]GPU [ICODE]c7:00.0[/ICODE] ([ICODE]10de:2bb3[/ICODE]) + audio [ICODE]c7:00.1[/ICODE]; guest Ubuntu 24.04, driver 580.159.03
+[*][ICODE]hostpci0: 0000:c7:00,pcie=1[/ICODE]; efidisk with [ICODE]pre-enrolled-keys=0[/ICODE] (Secure Boot off)
+[/LIST]
+The exact same config worked fine with an RTX 4080 in the same slot — everything below is Blackwell-specific.
+
+[HEADING=2]Bug 1 — QEMU segfaults on VM start ([ICODE]kvm: segfault at 40[/ICODE])[/HEADING]
+NULL-pointer deref in the QEMU process, right after the VFIO "reset done". Reproduces identically on [ICODE]pve-qemu-kvm[/ICODE] [B]10.0.2, 10.2.1 AND 11.0.2[/B], kernel 6.17.9. The card binds and resets cleanly at the vfio-pci level — this is a pure QEMU crash.
+
+[B]Dead ends (so you don't waste time):[/B]
+[LIST]
+[*]The [ICODE]VFIO dma-buf not supported in kernel[/ICODE] warning is a red herring — crash happens with or without it.
+[*]BAR1 / Resizable BAR size is NOT the cause — shrinking the 64 GB BAR1 to 256 MB (via [ICODE]resource1_resize[/ICODE]) did not help.
+[*]The szoran "1:1 IOMMU mapping, rejecting" kernel patch does not apply here — that dmesg reject never appears, and there's no [ICODE]iommu=pt[/ICODE].
+[/LIST]
+
+[B]Root cause[/B] (gdb backtrace on a minimal reproducer):
+[CODE]vfio_probe_nvidia_bar0_quirk   (hw/vfio/pci-quirks.c:928)
+  -> memory_region_add_subregion  with a NULL 'mirror' MemoryRegion[/CODE]
+QEMU applies its legacy [B]GeForce BAR0 quirk[/B] to the professional card and dereferences NULL instead of degrading gracefully.
+
+[B]Fix[/B] — disable the GeForce quirks on the vfio-pci device (the property description is literally "for NVIDIA Quadro/GRID/Tesla"):
+[CODE]-device vfio-pci,host=0000:c7:00.0,...,x-no-geforce-quirks=on[/CODE]
+Persistent in PVE — patch the command-line generator [ICODE]/usr/share/perl5/PVE/QemuServer/PCI.pm[/ICODE], inside the [ICODE]if ($j == 0)[/ICODE] block (~line 715):
+[CODE]$devicestr .= ',x-no-geforce-quirks=on';[/CODE]
+Verify: [ICODE]qm showcmd <vmid> | grep geforce[/ICODE]
+[QUOTE]This patch does NOT survive an apt upgrade of qemu-server — re-apply it after any PVE update that touches PCI.pm.[/QUOTE]
+
+[HEADING=2]Bug 2 — guest sees the GPU but it's dead ([ICODE]NVRM: BAR0 is 0M[/ICODE])[/HEADING]
+VM boots now, [ICODE]lspci[/ICODE] shows the card, the 580 driver loads, but:
+[CODE]NVRM: GPU 0000:01:00.0: BAR0 is 0M @ 0x0 (PCI:0000:01:00.0)
+nvidia-smi: No devices were found[/CODE]
+The host boot log has the real cause:
+[CODE]pci 0000:c7:00.0: BAR 0 [mem size 0x04000000]: can't assign; no space
+pci 0000:03.1: bridge window [mem 0xdd200000-0xdd2fffff 64bit] [size=1M][/CODE]
+BAR0 is [B]64 MB, 32-bit non-prefetchable[/B] (must live below 4 GB). The OCuLink PCIe root port ([ICODE]00:03.1[/ICODE]) only advertises a [B]1 MB[/B] 32-bit window → BAR0 gets size 0 → vfio-pci can't pass it through → guest sees no Region 0. (This is a separate BAR from BAR1/ReBAR — resizing those is irrelevant.)
+
+[B]Fix[/B] — let the kernel reallocate the PCI bridge windows:
+[CODE]# /etc/default/grub
+GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on pci=realloc"
+
+update-grub && reboot[/CODE]
+Verify after reboot:
+[CODE]dmesg | grep 'c7:00.0.*BAR 0'   # must now say "assigned", e.g. 0x80000000-0x83ffffff
+cat /sys/bus/pci/devices/0000:c7:00.0/resource | head -1   # no longer 0x0 0x0 0x0[/CODE]
+[QUOTE]If pci=realloc alone isn't enough: add pci=nocrs (ignores ACPI _CRS limits, slightly riskier), and check Above 4G Decoding / Resizable BAR in the host BIOS.[/QUOTE]
+
+[HEADING=2]Bug 3 — driver loads but won't initialize (open kernel modules required)[/HEADING]
+BAR0 is assigned and passed through, but the guest still fails:
+[CODE]NVRM: The NVIDIA GPU 0000:01:00.0 (PCI ID: 10de:2bb3)
+NVRM: installed in this system requires use of the NVIDIA open kernel modules.
+NVRM: GPU 0000:01:00.0: RmInitAdapter failed! (0x22:0x56:897)[/CODE]
+Blackwell is [B]only supported by the NVIDIA open kernel modules[/B]. The proprietary/closed module ([ICODE]license: NVIDIA[/ICODE]) loads but cannot init the card. Swap closed DKMS for open (userspace libs stay):
+[CODE]apt install nvidia-dkms-580-server-open
+
+# reload without rebooting the VM (nothing uses the GPU yet):
+systemctl stop nvidia-persistenced
+rmmod nvidia_drm nvidia_uvm nvidia_modeset nvidia
+modprobe nvidia
+systemctl start nvidia-persistenced[/CODE]
+Verify:
+[CODE]modinfo nvidia | grep license   # => Dual MIT/GPL  (open)  — NOT "NVIDIA" (closed)
+nvidia-smi                      # => NVIDIA RTX PRO 5000 Blackwell, 48 GB[/CODE]
+(If you use the .run installer instead: [ICODE]--kernel-module-type=open[/ICODE], and keep the open flavor on future DKMS rebuilds.)
+
+[HEADING=2]Order of operations[/HEADING]
+[LIST=1]
+[*]Patch PCI.pm ([ICODE]x-no-geforce-quirks=on[/ICODE]) → VM starts without segfault.
+[*][ICODE]pci=realloc[/ICODE] in GRUB, update-grub, reboot host → BAR0 gets assigned.
+[*]Guest: install [ICODE]nvidia-dkms-<ver>-server-open[/ICODE], reload modules → nvidia-smi works.
+[/LIST]
+Bugs 1+2 are host-side, bug 3 is guest-side. Only bug 2 needs a host reboot.
+
+Tested on [ICODE]pve-qemu-kvm 11.0.2-1[/ICODE] / kernel [ICODE]6.17.9-1-pve[/ICODE]. A future Proxmox/QEMU may guard the GeForce quirk for professional cards, making fix #1 unnecessary — check [ICODE]qm showcmd[/ICODE] before patching. Hope this saves someone the three-bug detour.
+
+Full writeup (with all the dead ends and reasoning): [URL]https://sunwalkersstudios.de/blog/blackwell-proxmox-gpu-passthrough.html[/URL]
