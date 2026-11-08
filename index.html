@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunwalkers Studios - NerdTales</title>
+    <title>Sunwalkers Studios · NerdTales &amp; Robocat Run</title>
+    <meta name="description" content="Pixel-Welten aus Neo Retroville: Entdecke NerdTales und spiele die kostenlose Windows-Testdemo von Robocat Run.">
     
     <!-- FAVICON EINTRAG: Verwendet das vorhandene Logo als Icon -->
     <link rel="icon" type="image/png" href="SunwalkersStudiosLogo.png">
@@ -12,7 +13,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lade Pixel-Schriftart für den gesamten Text -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
+    <script>
         /* Custom Tailwind Configuration - Angepasst an die Logo-Farben */
         tailwind.config = {
             theme: {
@@ -34,6 +35,8 @@
             }
         }
 
+    </script>
+    <style>
         /* Hintergrundmuster im Pixel-Stil und Schriftart-Definition */
         body {
             background-color: #2A1A2A; 
@@ -80,7 +83,16 @@
             margin-left: -1.5em;
         }
     </style>
-</head>
+<style>
+ .rcr-home{max-width:1152px;margin:0 auto 5rem;background:#0c1625;border:2px solid #6be6d7;color:#eff5fa;box-shadow:8px 8px 0 #171321;font-family:system-ui,sans-serif}
+ .rcr-home img{display:block;width:100%;height:auto}.rcr-home-copy{padding:clamp(24px,4vw,48px)}
+ .rcr-home h3{font-family:'Press Start 2P',monospace;font-size:clamp(18px,3vw,28px);line-height:1.6;margin:10px 0 18px;color:#6be6d7}
+ .rcr-home p{font-size:18px;line-height:1.7;max-width:780px}.rcr-eyebrow{color:#efc579;font-size:12px;font-weight:800;letter-spacing:.12em}
+ .rcr-home-actions{display:flex;gap:16px;flex-wrap:wrap;margin-top:26px}.rcr-link{display:inline-block;padding:15px 22px;background:#6be6d7;color:#102028;text-decoration:none;font-size:16px;font-weight:800;box-shadow:0 4px 0 #238a82}
+ .rcr-link.alt{background:transparent;color:#eff5fa;border:1px solid #7f91a5;box-shadow:none}.rcr-link:focus-visible{outline:3px solid #ffb733;outline-offset:5px}
+ .rcr-announcement{display:inline-block;margin-top:26px;padding:14px 18px;border:1px solid #6be6d7;color:#6be6d7;font-size:11px;line-height:1.8;text-decoration:none}
+ @media(max-width:460px){header nav{gap:2px!important;flex-wrap:wrap}header nav a{font-size:9px!important;padding:5px!important}}
+ </style></head>
 <body class="antialiased text-logo-text-light">
 
     <!-- Header / Navigation -->
@@ -97,7 +109,7 @@
             <nav class="space-x-2 sm:space-x-4 flex">
                 <a href="#studio" class="text-logo-text-light hover:text-logo-accent-orange text-xs sm:text-sm p-1 sm:p-2 transition duration-300">STUDIO</a>
                 <a href="#nerdtales" class="text-logo-text-light hover:text-logo-accent-orange text-xs sm:text-sm p-1 sm:p-2 transition duration-300">NERDTALES</a>
-                <a href="#minigame" class="text-logo-text-light hover:text-logo-accent-orange text-xs sm:text-sm p-1 sm:p-2 transition duration-300">ROBOCAT</a>
+                <a href="robocat-run/" class="text-logo-text-light hover:text-logo-accent-orange text-xs sm:text-sm p-1 sm:p-2 transition duration-300">ROBOCAT</a>
                 <a href="blog/" class="text-logo-text-light hover:text-logo-accent-orange text-xs sm:text-sm p-1 sm:p-2 transition duration-300">LAB</a>
             </nav>
         </div>
@@ -119,6 +131,7 @@
             </p>
         </section>
 
+        <div class="max-w-4xl mx-auto text-center -mt-12 mb-16"><a class="rcr-announcement" href="robocat-run/">NEU: ROBOCAT RUN · JETZT DIE DEMO SPIELEN →</a></div>
         <!-- Sektion 1: Über Sunwalkers Studios -->
         <div id="studio" class="h-16"></div> <!-- Anker-Offset -->
         <section class="max-w-5xl mx-auto bg-logo-card-bg p-6 md:p-12 pixel-border ring-4 ring-logo-accent-orange shadow-logo-glow mb-16">
@@ -126,7 +139,7 @@
                 // STUDIO-MANIFEST
             </h3>
             <p class="text-xs sm:text-sm text-logo-text-light leading-relaxed">
-                Sunwalkers Studios wurde mit der Mission gegründet, die vielfältigen und verrückten Ecken der Pop-Kultur in interaktive Abenteuer zu verwandeln. Wir lieben **Pixel-Art**, tiefgründiges Storytelling und den humorvollen Twist, der Nostalgie auf ein neues Level hebt. Unsere Spiele sind Liebesbriefe an die Klassiker, gebaut mit der Technologie von heute.
+                Sunwalkers Studios wurde mit der Mission gegründet, die vielfältigen und verrückten Ecken der Pop-Kultur in interaktive Abenteuer zu verwandeln. Wir lieben <strong>Pixel-Art</strong>, tiefgründiges Storytelling und den humorvollen Twist, der Nostalgie auf ein neues Level hebt. Unsere Spiele sind Liebesbriefe an die Klassiker, gebaut mit der Technologie von heute.
             </p>
         </section>
 
@@ -207,28 +220,15 @@
             </div>
         </section>
 
-        <!-- Sektion 3: RoboCatRun Mini-Game Teaser -->
-        <div id="minigame" class="h-16"></div> <!-- Anker-Offset -->
-        <section class="max-w-4xl mx-auto bg-logo-card-bg p-6 md:p-12 pixel-border ring-4 ring-logo-accent-orange shadow-logo-glow mb-16">
-            <h3 class="text-xl sm:text-2xl text-logo-accent-orange mb-6 border-b-2 pb-2 border-logo-text-light">
-                // MINI-GAME: ROBOCATRUN
-            </h3>
-            <div class="flex flex-col lg:flex-row gap-6 items-center">
-                <div class="lg:w-1/2">
-                    <p class="text-xs sm:text-sm text-logo-text-light leading-relaxed mb-4">
-                        Neben dem großen Adventure erwartet euch in NerdTales auch ein knackiges Arcade-Erlebnis: **RoboCatRun!** Ein endloser Runner im Stil klassischer Handheld-Spiele, bei dem ihr als RoboCat durch die glitchenden Sektoren von Neo-Retroville rennt.
-                    </p>
-                    <ul class="list-pixel text-logo-accent-orange space-y-2 text-xs sm:text-sm">
-                        <li><span class="text-logo-text-light">Pixel-Perfektes Timing.</span></li>
-                        <li><span class="text-logo-text-light">Highscore-Jagd.</span></li>
-                        <li><span class="text-logo-text-light">Eingebettet in die NerdTales-Welt.</span></li>
-                    </ul>
-                </div>
-                
-                <!-- Mockup des Minigames (einfacher Kasten) -->
-                <div class="lg:w-1/2 w-full aspect-video bg-logo-dark-bg border-4 border-logo-accent-orange shadow-xl shadow-logo-glow flex items-center justify-center text-lg sm:text-xl text-logo-accent-orange">
-                    [ROBOCATRUN - START-SCREEN]
-                </div>
+        <!-- Robocat Run: current standalone game and public test demo -->
+        <div id="minigame" class="h-16"></div>
+        <section class="rcr-home" aria-labelledby="rcr-title">
+            <a href="robocat-run/" aria-label="Robocat Run entdecken"><img src="robocat-run/assets/keyart.webp" width="1680" height="931" loading="lazy" alt="Robocat Run: die türkisfarbene Roboterkatze jagt eine mechanische Maus über die Dächer von Neo Retroville."></a>
+            <div class="rcr-home-copy"><span class="rcr-eyebrow">KOSTENLOSE WINDOWS-TESTDEMO · DREI KAPITEL</span>
+            <h3 id="rcr-title">ROBOCAT RUN</h3>
+            <p>Eine Roboterkatze. Eine Maus, die Ärger macht. Und eine Stadt voller Hindernisse. Springe über die Dächer, fliege durch enge Luftschächte und wage dich ins dunkle Kulturarchiv.</p>
+            <p>Robocat Run ist ein eigenständiges Pixel-Jump-and-Run aus Neo Retroville. Die Testdemo ist da – und wir suchen deine ehrliche Meinung.</p>
+            <div class="rcr-home-actions"><a class="rcr-link" href="robocat-run/#demo">Kostenlose Demo spielen →</a><a class="rcr-link alt" href="robocat-run/#reel">Gameplay ansehen</a></div>
             </div>
         </section>
 
@@ -237,7 +237,7 @@
     <!-- Footer -->
     <footer class="max-w-7xl mx-auto text-center py-8 border-t-2 border-logo-accent-orange mt-12">
         <p class="text-logo-text-light opacity-50 text-xs sm:text-sm">
-            &copy; 2025 SUNWALKERS STUDIOS. DOMAIN: SUNWALKERSSTUDIOS.DE
+            &copy; 2026 SUNWALKERS STUDIOS. DOMAIN: SUNWALKERSSTUDIOS.DE
         </p>
         <p class="text-logo-text-light opacity-50 text-xs mt-1">
             ALLE RECHTE VORBEHALTEN. WILLKOMMEN IM RETRO-GRID.
