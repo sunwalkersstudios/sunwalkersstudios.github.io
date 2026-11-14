@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="rcr-version" content="0.2.0"><meta name="rcr-levels" content="2-1">
+<meta name="rcr-version" content="0.2.1"><meta name="rcr-levels" content="2-1">
 <meta name="theme-color" content="#091522"><meta name="color-scheme" content="dark">
 <title>Über den Dächern · Robocat Run im Browser</title>
 <meta name="description" content="Jage als Roboterkatze über die Dächer von Neo Retroville. Ein kostenloses Robocat-Run-Level direkt im Browser – ohne Installation. Für Computer mit Tastatur.">
@@ -24,14 +24,14 @@
   <div class="pitch error" id="error" hidden><span class="eyebrow">Hier stockt die Jagd</span><h1>Das Spiel konnte nicht starten.</h1><p id="error-text" role="alert"></p><button class="button" id="retry">Erneut versuchen</button><a class="button ghost" href="https://sunwalkersstudios.de/robocat-run/#demo" target="_top">Zur Windows-Demo ↗</a></div>
  </div>
 </div>
-<div class="toolbar"><div class="caption">Über den Dächern<small>Browserdemo 0.2 · Dachlevel 2–1 · Überarbeitete Fassung</small></div><div class="tools"><button class="button ghost" id="pause" disabled>Pause</button><button class="button ghost" id="fullscreen" disabled>Vollbild ⛶</button></div></div>
+<div class="toolbar"><div class="caption">Über den Dächern<small>Browserdemo 0.2.1 · Dachlevel 2–1 · Überarbeitete Fassung</small></div><div class="tools"><button class="button ghost" id="pause" disabled>Pause</button><button class="button ghost" id="fullscreen" disabled>Vollbild ⛶</button></div></div>
 <div class="under"><div><details><summary>Steuerung &amp; Speichern</summary><p><kbd>←</kbd> <kbd>→</kbd> Laufen · <kbd>Leertaste</kbd> Springen · noch einmal: Doppelsprung · beim Fallen halten: Hover · <kbd>↓</kbd> Ducken · <kbd>Shift</kbd> Dash · <kbd>F</kbd> Laser · <kbd>E</kbd> Interagieren · <kbd>Esc</kbd> Pause.</p><p>Bestleistungen und Gegnerarchiv werden in diesem Browser gespeichert. Ein angefangenes Level beginnt beim nächsten Besuch von vorn. Beim Löschen der Websitedaten geht auch dieser Spielstand verloren. Die Windows-Version speichert unabhängig davon.</p></details><p id="focus-hint">Mit Tastatur spielen. Du kannst die Tastenbelegung im Spiel ändern.</p></div><div class="links"><a href="https://sunwalkersstudios.de/robocat-run/#demo" target="_top">Mehr spielen: Windows-Demo ↗</a><a href="https://jarvis-core.tailb9e16c.ts.net:10000/rcr/feedback/" target="_blank" rel="noopener">Feedback geben ↗</a></div></div>
 <pre id="diagnostics" hidden></pre>
 </main><footer><span>© 2026 Sunwalkers Studios</span><a href="https://sunwalkersstudios.de/impressum.html" target="_top">Impressum</a><span>In Entwicklung · Noch kein fertiges Spiel</span></footer>
 </div>
 <script>
 'use strict';
-const config={"dataUrl": "Build/0.2.0/web-build.data.unityweb", "frameworkUrl": "Build/0.2.0/web-build.framework.js.unityweb", "codeUrl": "Build/0.2.0/web-build.wasm.unityweb", "streamingAssetsUrl": "StreamingAssets", "companyName": "Sunwalkers Studios", "productName": "Robocat Run Browser Demo", "productVersion": "0.2.0"};
+const config={"dataUrl": "Build/0.2.1/web-build-0.2.1.data.unityweb", "frameworkUrl": "Build/0.2.1/web-build-0.2.1.framework.js.unityweb", "codeUrl": "Build/0.2.1/web-build-0.2.1.wasm.unityweb", "streamingAssetsUrl": "StreamingAssets", "companyName": "Sunwalkers Studios", "productName": "Robocat Run Browser Demo", "productVersion": "0.2.1"};
 const el=id=>document.getElementById(id), canvas=el('game');
 let game=null, started=false, ready=false, failed=false;
 const reviewing=['127.0.0.1','localhost'].includes(location.hostname)&&new URLSearchParams(location.search).has('review');
@@ -50,7 +50,7 @@ el('start').addEventListener('click',()=>{
  el('intro').hidden=true;el('loading').hidden=false;
  // Keep a real drawing surface during loading; the poster stays above it.
  canvas.hidden=false;
- const script=document.createElement('script');script.src='Build/0.2.0/web-build.loader.js';
+ const script=document.createElement('script');script.src='Build/0.2.1/web-build-0.2.1.loader.js';
  script.onerror=()=>fail('Die Spieldateien konnten nicht geladen werden. Prüfe deine Verbindung und versuche es noch einmal.');
  script.onload=()=>createUnityInstance(canvas,config,p=>{
    const value=Math.round(p*100);el('fill').style.width=value+'%';el('fill').parentElement.setAttribute('aria-valuenow',value);
